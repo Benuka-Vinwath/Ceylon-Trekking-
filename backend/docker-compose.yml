@@ -1,0 +1,13 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ceylon
+      POSTGRES_PASSWORD: ceylon
+      POSTGRES_DB: ceylon_trekking
+    ports: ["5432:5432"]
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d   # runs schema.sql then seed.sql on first start
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
