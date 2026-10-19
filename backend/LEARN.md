@@ -23,7 +23,9 @@ Flutter app  --HTTP/JSON-->  Express routes  --SQL-->  PostgreSQL
 | 4 | Parking + gear shops (DONE) | 15-18 | Geo data, "nearby" queries (lat/lng distance), one-to-many |
 | 5 | Equipment booking (DONE) | proposal's rental feature | Transactions, date-overlap checks, keeping bookings accurate |
 | 6 | Admin (DONE) | 21 Admin Dashboard | Role-based access, `COUNT` stats, moderation |
-| 7 | Production basics | all | Validation, error handling, env config, deployment, offline-map file serving |
+| 7 | Hikes, offline maps, hardening, deploy (DONE) | all | Validation, error handling, env config, deployment, offline-map file serving |
+
+See [README.md](README.md) for the full API list and deploy steps.
 
 ## Files to read first
 - `db/schema.sql`: the data model. Design this before any code.

@@ -107,3 +107,39 @@ CREATE TABLE booking_items (
   price_per_day NUMERIC(8,2) NOT NULL,              -- copied at booking time, so later price changes don't alter old bookings
   PRIMARY KEY (booking_id, equipment_id)
 );
+
+-- Lesson 7: finished hikes (Trek Summary + Profile stats), each trek's route (Live Navigation), offline map packs (Offline Maps).
+CREATE TABLE hikes (
+  id               SERIAL PRIMARY KEY,
+  user_id          INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  trek_id          INTEGER NOT NULL REFERENCES treks(id) ON DELETE CASCADE,
+  distance_km      NUMERIC(6,2) NOT NULL CHECK (distance_km > 0),
+  duration_seconds INTEGER NOT NULL CHECK (duration_seconds > 0),
+  elevation_gain_m INTEGER NOT NULL DEFAULT 0 CHECK (elevation_gain_m >= 0),
+  started_at       TIMESTAMPTZ NOT NULL,
+  path             JSONB NOT NULL DEFAULT '[]',     -- shortcut: a list of [lat, lng] points; move to PostGIS if paths ever need map queries
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE trek_waypoints (
+  id          SERIAL PRIMARY KEY,
+  trek_id     INTEGER NOT NULL REFERENCES treks(id) ON DELETE CASCADE,
+  position    INTEGER NOT NULL CHECK (position > 0),   -- order along the route: 1 = trailhead
+  name        TEXT NOT NULL,
+  lat         DOUBLE PRECISION NOT NULL,
+  lng         DOUBLE PRECISION NOT NULL,
+  elevation_m INTEGER NOT NULL DEFAULT 0,
+  UNIQUE (trek_id, position)
+);
+
+-- Metadata about a map pack. The app downloads the map tiles itself, for the area (bounds) listed here.
+CREATE TABLE offline_maps (
+  id         SERIAL PRIMARY KEY,
+  trek_id    INTEGER NOT NULL UNIQUE REFERENCES treks(id) ON DELETE CASCADE,
+  size_mb    NUMERIC(6,1) NOT NULL CHECK (size_mb > 0),
+  south      DOUBLE PRECISION NOT NULL,
+  west       DOUBLE PRECISION NOT NULL,
+  north      DOUBLE PRECISION NOT NULL,
+  east       DOUBLE PRECISION NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);

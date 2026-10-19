@@ -23,3 +23,18 @@ INSERT INTO equipment (shop_id, name, price_per_day, stock) VALUES
 (1, 'Tent (2 person)', 1500, 6), (1, 'Sleeping bag', 600, 10), (1, 'Headlamp', 250, 12), (1, 'Trekking poles', 300, 8), (1, 'Backpack 50 L', 800, 5),
 (2, 'Backpack 50 L', 800, 4), (2, 'Trekking poles', 300, 6), (2, 'Rain jacket', 400, 7),
 (3, 'Tent (2 person)', 1500, 3), (3, 'Camping stove', 500, 4), (3, 'Hiking boots', 700, 0);
+
+-- Sample route points (approximate). Only Adam's Peak and Ella Rock have routes so far.
+INSERT INTO trek_waypoints (trek_id, position, name, lat, lng, elevation_m) VALUES
+(1, 1, 'Dalhousie Trailhead', 6.8120, 80.5010, 1150),
+(1, 2, 'Seetha Gangula',      6.8112, 80.5004, 1320),
+(1, 3, 'Indikatupana',        6.8104, 80.4999, 1710),
+(1, 4, 'Summit',              6.8096, 80.4994, 2243),
+(2, 1, 'Ella Station',           6.8660, 81.0460, 1000),
+(2, 2, 'Railway track junction', 6.8650, 81.0480, 1020),
+(2, 3, 'Ella Rock summit',       6.8667, 81.0466, 1041);
+
+-- Sample map packs: an area of about 9 km around each trek.
+INSERT INTO offline_maps (trek_id, size_mb, south, west, north, east, updated_at)
+SELECT t.id, v.size_mb, t.lat - 0.04, t.lng - 0.04, t.lat + 0.04, t.lng + 0.04, now() - v.age
+FROM treks t JOIN (VALUES (1, 42.0, interval '3 days'), (2, 35.0, interval '7 days'), (3, 21.0, interval '1 day'), (4, 38.0, interval '14 days')) AS v(trek_id, size_mb, age) ON v.trek_id = t.id;

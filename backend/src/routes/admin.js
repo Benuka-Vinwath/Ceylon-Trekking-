@@ -30,6 +30,11 @@ const SHOP = {
   owner_id: ['int', { min: 1, optional: true, nullable: true }], name, address: optionalText, phone: optionalText, lat, lng,
   opens: ['time'], closes: ['time'], rating: ['num', { min: 0, max: 5, optional: true, nullable: true }],
 };
+const WAYPOINT = { trek_id: ['int', { min: 1 }], position: ['int', { min: 1, max: 1000 }], name, lat, lng, elevation_m: ['int', { min: -100, max: 9000, optional: true }] };
+const OFFLINE_MAP = {
+  trek_id: ['int', { min: 1 }], size_mb: ['num', { min: 0.1, max: 5000 }],
+  south: lat, north: lat, west: lng, east: lng,
+};
 const EQUIPMENT = { shop_id: ['int', { min: 1 }], name, price_per_day: money, stock: count };
 
 // Makes POST /path, PUT /path/:id and DELETE /path/:id for one table.
@@ -47,6 +52,7 @@ function crud(path, table, spec) {
       res.status(201).json(rows[0]);
     } catch (err) {
       if (err.code === '23503') return res.status(400).json({ error: 'A linked item (trek, shop or owner) does not exist' });
+      if (err.code === '23505') return res.status(409).json({ error: 'That already exists (for example the same position on a trek, or a second map for one trek)' });
       next(err);
     }
   });
@@ -66,6 +72,7 @@ function crud(path, table, spec) {
       res.json(rows[0]);
     } catch (err) {
       if (err.code === '23503') return res.status(400).json({ error: 'A linked item (trek, shop or owner) does not exist' });
+      if (err.code === '23505') return res.status(409).json({ error: 'That already exists (for example the same position on a trek, or a second map for one trek)' });
       next(err);
     }
   });
@@ -88,6 +95,8 @@ crud('/treks', 'treks', TREK);
 crud('/parking', 'parking_locations', PARKING);
 crud('/shops', 'shops', SHOP); // setting owner_id here is how a shop gets its owner
 crud('/equipment', 'equipment', EQUIPMENT);
+crud('/waypoints', 'trek_waypoints', WAYPOINT);
+crud('/offline-maps', 'offline_maps', OFFLINE_MAP);
 
 // GET /api/admin/stats -> the four tiles at the top of the Admin Dashboard
 router.get('/stats', async (_req, res, next) => {

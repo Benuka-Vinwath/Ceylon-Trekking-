@@ -39,6 +39,18 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+// GET /api/treks/:id/route -> Live Navigation: the waypoints in walking order
+router.get('/:id/route', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id)) return res.status(400).json({ error: 'Invalid id' });
+    const { rows } = await pool.query('SELECT position, name, lat, lng, elevation_m FROM trek_waypoints WHERE trek_id = $1 ORDER BY position', [id]);
+    res.json(rows);
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/treks/:id -> Trek Details screen
 router.get('/:id', async (req, res, next) => {
   try {

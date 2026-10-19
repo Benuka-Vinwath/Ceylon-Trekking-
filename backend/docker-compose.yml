@@ -1,3 +1,5 @@
+# docker compose up -d db          -> just the database (use with `npm run dev`)
+# JWT_SECRET=<long random text> docker compose up -d --build   -> database + API together
 services:
   db:
     image: postgres:16
@@ -7,7 +9,22 @@ services:
       POSTGRES_DB: ceylon_trekking
     ports: ["5432:5432"]
     volumes:
-      - ./db:/docker-entrypoint-initdb.d   # runs schema.sql then seed.sql on first start
+      - ./db:/docker-entrypoint-initdb.d   # on first start runs the .sql files here: schema.sql, then seed.sql
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ceylon -d ceylon_trekking"]
+      interval: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports: ["3000:3000"]
+    environment:
+      DATABASE_URL: postgres://ceylon:ceylon@db:5432/ceylon_trekking
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET to a long random text}
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   pgdata:
