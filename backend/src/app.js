@@ -6,6 +6,7 @@ import reviews from './routes/reviews.js';
 import saved from './routes/saved.js';
 import parking from './routes/parking.js';
 import shops from './routes/shops.js';
+import bookings from './routes/bookings.js';
 
 const app = express();
 app.use(cors());
@@ -18,6 +19,7 @@ app.use('/api', reviews);
 app.use('/api/saved', saved);
 app.use('/api', parking);
 app.use('/api/shops', shops);
+app.use('/api', bookings);
 
 // Express recognises error handlers by their 4 arguments.
 app.use((err, _req, res, _next) => {

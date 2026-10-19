@@ -85,3 +85,24 @@ CREATE TABLE equipment (
   price_per_day NUMERIC(8,2) NOT NULL CHECK (price_per_day >= 0),
   stock         INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0)
 );
+
+-- Lesson 5: a booking is one header row plus one row per kind of equipment in it.
+CREATE TABLE bookings (
+  id          SERIAL PRIMARY KEY,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  shop_id     INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  start_date  DATE NOT NULL,
+  end_date    DATE NOT NULL,                        -- last day of the rental (inclusive)
+  status      TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed','cancelled')),
+  total_price NUMERIC(10,2) NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK (end_date >= start_date)
+);
+
+CREATE TABLE booking_items (
+  booking_id    INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+  equipment_id  INTEGER NOT NULL REFERENCES equipment(id),   -- no cascade: deleting gear must not rewrite past bookings
+  quantity      INTEGER NOT NULL CHECK (quantity > 0),
+  price_per_day NUMERIC(8,2) NOT NULL,              -- copied at booking time, so later price changes don't alter old bookings
+  PRIMARY KEY (booking_id, equipment_id)
+);

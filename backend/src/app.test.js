@@ -77,3 +77,37 @@ test('parking and shops reject bad input before the database', async () => {
     assert.equal((await get(path)).status, 400, path);
   }
 });
+
+test('bookings need a login, and bad bookings are rejected before the database', async () => {
+  assert.equal(await post('/api/bookings', {}), 401);
+  assert.equal((await get('/api/bookings')).status, 401);
+
+  process.env.JWT_SECRET = 'test-secret';
+  const { signToken } = await import('./auth.js');
+  const token = signToken({ id: 1, role: 'trekker' });
+  const book = async (body) => {
+    const server = app.listen(0);
+    try {
+      const res = await fetch(`http://localhost:${server.address().port}/api/bookings`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
+      });
+      return res.status;
+    } finally {
+      server.close();
+    }
+  };
+  const ok = { shop_id: 1, start_date: '2099-01-01', end_date: '2099-01-03', items: [{ equipment_id: 1, quantity: 1 }] };
+  assert.equal(await book({ ...ok, shop_id: 'x' }), 400);
+  assert.equal(await book({ ...ok, start_date: '2020-01-01' }), 400);          // past
+  assert.equal(await book({ ...ok, start_date: '2099-02-31' }), 400);          // not a real date
+  assert.equal(await book({ ...ok, end_date: '2098-12-31' }), 400);            // ends before it starts
+  assert.equal(await book({ ...ok, end_date: '2099-03-01' }), 400);            // over 30 days
+  assert.equal(await book({ ...ok, items: [] }), 400);
+  assert.equal(await book({ ...ok, items: [{ equipment_id: 1, quantity: 0 }] }), 400);
+  assert.equal(await book({ ...ok, items: [{ equipment_id: 1, quantity: 1 }, { equipment_id: 1, quantity: 1 }] }), 400);
+});
+
+test('availability needs valid dates', async () => {
+  assert.equal((await get('/api/shops/1/availability')).status, 400);
+  assert.equal((await get('/api/shops/abc/availability?start=2099-01-01&end=2099-01-02')).status, 400);
+});
