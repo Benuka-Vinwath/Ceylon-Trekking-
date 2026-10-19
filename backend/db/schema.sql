@@ -39,3 +39,49 @@ CREATE TABLE saved_treks (
   saved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (user_id, trek_id)                     -- can't save the same trek twice
 );
+
+-- Lesson 4: distance in km between two GPS points (the "haversine" formula: distance over a sphere).
+CREATE FUNCTION distance_km(lat1 DOUBLE PRECISION, lng1 DOUBLE PRECISION, lat2 DOUBLE PRECISION, lng2 DOUBLE PRECISION)
+RETURNS DOUBLE PRECISION LANGUAGE SQL IMMUTABLE AS $$
+  SELECT 2 * 6371 * asin(LEAST(1, sqrt(
+    sin(radians(lat2 - lat1) / 2) ^ 2 +
+    cos(radians(lat1)) * cos(radians(lat2)) * sin(radians(lng2 - lng1) / 2) ^ 2)))
+$$;
+
+-- One trek has many parking places (one-to-many: the parking row holds the trek's id).
+CREATE TABLE parking_locations (
+  id          SERIAL PRIMARY KEY,
+  trek_id     INTEGER NOT NULL REFERENCES treks(id) ON DELETE CASCADE,
+  name        TEXT NOT NULL,
+  address     TEXT NOT NULL DEFAULT '',
+  lat         DOUBLE PRECISION NOT NULL,
+  lng         DOUBLE PRECISION NOT NULL,
+  spaces      INTEGER NOT NULL CHECK (spaces >= 0),
+  fee_per_day NUMERIC(8,2) NOT NULL DEFAULT 0 CHECK (fee_per_day >= 0),   -- 0 means free
+  is_covered  BOOLEAN NOT NULL DEFAULT false,
+  hours       TEXT NOT NULL DEFAULT 'Open 24 h',
+  vehicles    TEXT[] NOT NULL DEFAULT '{}',
+  facilities  TEXT[] NOT NULL DEFAULT '{}',
+  status      TEXT NOT NULL DEFAULT 'Open' CHECK (status IN ('Open','Limited','Closed'))
+);
+
+CREATE TABLE shops (
+  id        SERIAL PRIMARY KEY,
+  owner_id  INTEGER REFERENCES users(id) ON DELETE SET NULL,   -- the shop_owner account (used in lesson 6)
+  name      TEXT NOT NULL,
+  address   TEXT NOT NULL DEFAULT '',
+  phone     TEXT NOT NULL DEFAULT '',
+  lat       DOUBLE PRECISION NOT NULL,
+  lng       DOUBLE PRECISION NOT NULL,
+  opens     TIME NOT NULL,
+  closes    TIME NOT NULL,
+  rating    NUMERIC(2,1)    -- shortcut: a typed-in number, because shops have no reviews yet; replace if shop reviews are added
+);
+
+CREATE TABLE equipment (
+  id            SERIAL PRIMARY KEY,
+  shop_id       INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  name          TEXT NOT NULL,
+  price_per_day NUMERIC(8,2) NOT NULL CHECK (price_per_day >= 0),
+  stock         INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0)
+);

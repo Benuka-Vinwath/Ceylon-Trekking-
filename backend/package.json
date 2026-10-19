@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "node --watch --env-file=.env src/server.js",
     "start": "node --env-file=.env src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "db:reset": "node --env-file=.env db/reset.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

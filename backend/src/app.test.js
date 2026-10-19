@@ -68,3 +68,12 @@ test('review with a bad rating or tag is rejected before the database', async ()
   assert.equal(await send({ rating: 9 }), 400);
   assert.equal(await send({ rating: 4, tags: ['Scary'] }), 400);
 });
+
+test('parking and shops reject bad input before the database', async () => {
+  for (const path of [
+    '/api/parking?lat=abc&lng=81', '/api/parking?lat=6.8', '/api/parking?lat=99&lng=81', '/api/parking?fee=cheap',
+    '/api/parking/abc', '/api/treks/abc/parking', '/api/shops?lat=0&lng=500', '/api/shops/abc',
+  ]) {
+    assert.equal((await get(path)).status, 400, path);
+  }
+});
