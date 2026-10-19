@@ -9,7 +9,7 @@ router.get('/', async (req, res, next) => {
   try {
     const where = [];
     const params = [];
-    const { difficulty, q } = req.query;
+    const { difficulty, q, region } = req.query;
 
     if (difficulty) {
       if (!DIFFICULTIES.includes(difficulty)) return res.status(400).json({ error: 'Invalid difficulty' });
@@ -19,6 +19,10 @@ router.get('/', async (req, res, next) => {
     if (q) {
       params.push(`%${q}%`);
       where.push(`name ILIKE $${params.length}`);
+    }
+    if (region) {
+      params.push(region);
+      where.push(`region = $${params.length}`);
     }
 
     // $1, $2 are placeholders: values travel separately from the SQL, which blocks SQL injection.
