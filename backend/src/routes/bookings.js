@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { requireAuth } from '../auth.js';
+import { requireAuth, isAdmin } from '../auth.js';
 import { parseId } from '../util.js';
 
 const router = Router();
@@ -147,7 +147,7 @@ router.get('/bookings/:id', requireAuth, async (req, res, next) => {
     if (id === null) return res.status(400).json({ error: 'Invalid id' });
     const { rows } = await pool.query(`${BOOKING} WHERE b.id = $1`, [id]);
     const b = rows[0];
-    const allowed = b && (b.user_id === req.user.id || b.owner_id === req.user.id || req.user.role === 'admin');
+    const allowed = b && (b.user_id === req.user.id || b.owner_id === req.user.id || (await isAdmin(req.user.id)));
     if (!allowed) return res.status(404).json({ error: 'Booking not found' }); // same answer whether it exists or not
     res.json(publicBooking(b));
   } catch (err) {
@@ -179,7 +179,7 @@ router.get('/shops/:id/bookings', requireAuth, async (req, res, next) => {
     if (shopId === null) return res.status(400).json({ error: 'Invalid id' });
     const shop = await pool.query('SELECT owner_id FROM shops WHERE id = $1', [shopId]);
     if (!shop.rows.length) return res.status(404).json({ error: 'Shop not found' });
-    if (shop.rows[0].owner_id !== req.user.id && req.user.role !== 'admin') return res.status(403).json({ error: 'Not your shop' });
+    if (shop.rows[0].owner_id !== req.user.id && !(await isAdmin(req.user.id))) return res.status(403).json({ error: 'Not your shop' });
     const { rows } = await pool.query(`${BOOKING} WHERE b.shop_id = $1 ORDER BY b.start_date`, [shopId]);
     res.json(rows.map(publicBooking));
   } catch (err) {

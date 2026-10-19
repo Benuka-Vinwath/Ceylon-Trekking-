@@ -111,3 +111,11 @@ test('availability needs valid dates', async () => {
   assert.equal((await get('/api/shops/1/availability')).status, 400);
   assert.equal((await get('/api/shops/abc/availability?start=2099-01-01&end=2099-01-02')).status, 400);
 });
+
+test('admin routes refuse people who are not logged in', async () => {
+  for (const path of ['/api/admin/stats', '/api/admin/users', '/api/admin/reviews']) {
+    assert.equal((await get(path)).status, 401, path);
+  }
+  assert.equal(await post('/api/admin/treks', { name: 'x' }), 401);
+  assert.equal(await post('/api/reviews/1/flag', {}), 401);
+});

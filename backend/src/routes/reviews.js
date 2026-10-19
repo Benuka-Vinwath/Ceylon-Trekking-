@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { pool } from '../db.js';
-import { requireAuth } from '../auth.js';
+import { requireAuth, isAdmin } from '../auth.js';
 import { parseId } from '../util.js';
 
 const router = Router();
@@ -88,15 +88,27 @@ router.put('/reviews/:id', requireAuth, async (req, res, next) => {
   }
 });
 
+// POST /api/reviews/:id/flag -> "Report" button: any logged-in user can send a review to the admins
+router.post('/reviews/:id/flag', requireAuth, async (req, res, next) => {
+  try {
+    const id = parseId(req.params.id);
+    if (id === null) return res.status(400).json({ error: 'Invalid id' });
+    const { rowCount } = await pool.query('UPDATE reviews SET flagged = true WHERE id = $1', [id]);
+    if (!rowCount) return res.status(404).json({ error: 'Review not found' });
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // DELETE /api/reviews/:id -> delete your own review (admins can delete any: Admin Dashboard)
 router.delete('/reviews/:id', requireAuth, async (req, res, next) => {
   try {
     const id = parseId(req.params.id);
     if (id === null) return res.status(400).json({ error: 'Invalid id' });
-    const isAdmin = req.user.role === 'admin';
     const { rowCount } = await pool.query(
       'DELETE FROM reviews WHERE id = $1 AND ($2 OR user_id = $3)',
-      [id, isAdmin, req.user.id]
+      [id, await isAdmin(req.user.id), req.user.id]
     );
     if (!rowCount) return res.status(404).json({ error: 'Review not found' });
     res.status(204).end();

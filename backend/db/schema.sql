@@ -28,6 +28,7 @@ CREATE TABLE reviews (
   rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment    TEXT NOT NULL DEFAULT '',
   tags       TEXT[] NOT NULL DEFAULT '{}',          -- chips on the Write Review screen
+  flagged    BOOLEAN NOT NULL DEFAULT false,        -- reported by a user, waiting for an admin
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (trek_id, user_id)                          -- one review per user per trek
 );
@@ -90,7 +91,7 @@ CREATE TABLE equipment (
 CREATE TABLE bookings (
   id          SERIAL PRIMARY KEY,
   user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  shop_id     INTEGER NOT NULL REFERENCES shops(id) ON DELETE CASCADE,
+  shop_id     INTEGER NOT NULL REFERENCES shops(id),   -- no cascade: a shop with booking history cannot be deleted
   start_date  DATE NOT NULL,
   end_date    DATE NOT NULL,                        -- last day of the rental (inclusive)
   status      TEXT NOT NULL DEFAULT 'confirmed' CHECK (status IN ('confirmed','cancelled')),

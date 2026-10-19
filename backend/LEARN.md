@@ -22,7 +22,7 @@ Flutter app  --HTTP/JSON-->  Express routes  --SQL-->  PostgreSQL
 | 3 | Reviews + saved treks (DONE) | 09, 10, 20 | Foreign keys, `JOIN`, `AVG`, protected routes, `UNIQUE` constraints |
 | 4 | Parking + gear shops (DONE) | 15-18 | Geo data, "nearby" queries (lat/lng distance), one-to-many |
 | 5 | Equipment booking (DONE) | proposal's rental feature | Transactions, date-overlap checks, keeping bookings accurate |
-| 6 | Admin | 21 Admin Dashboard | Role-based access, `COUNT` stats, moderation |
+| 6 | Admin (DONE) | 21 Admin Dashboard | Role-based access, `COUNT` stats, moderation |
 | 7 | Production basics | all | Validation, error handling, env config, deployment, offline-map file serving |
 
 ## Files to read first
