@@ -27,6 +27,15 @@ CREATE TABLE reviews (
   user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rating     INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
   comment    TEXT NOT NULL DEFAULT '',
+  tags       TEXT[] NOT NULL DEFAULT '{}',          -- chips on the Write Review screen
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   UNIQUE (trek_id, user_id)                          -- one review per user per trek
+);
+
+-- Many-to-many: one user saves many treks, one trek is saved by many users.
+CREATE TABLE saved_treks (
+  user_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  trek_id  INTEGER NOT NULL REFERENCES treks(id) ON DELETE CASCADE,
+  saved_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, trek_id)                     -- can't save the same trek twice
 );

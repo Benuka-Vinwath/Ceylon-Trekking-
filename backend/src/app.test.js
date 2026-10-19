@@ -43,3 +43,28 @@ test('signup rejects bad input before touching the database', async () => {
 test('protected route needs a token', async () => {
   assert.equal((await get('/api/auth/me')).status, 401);
 });
+
+test('reviews and saved treks need a login', async () => {
+  assert.equal((await get('/api/saved')).status, 401);
+  assert.equal((await get('/api/reviews/mine')).status, 401);
+  assert.equal(await post('/api/treks/1/reviews', { rating: 5 }), 401);
+});
+
+test('review with a bad rating or tag is rejected before the database', async () => {
+  process.env.JWT_SECRET = 'test-secret';
+  const { signToken } = await import('./auth.js');
+  const token = signToken({ id: 1, role: 'trekker' });
+  const send = async (body) => {
+    const server = app.listen(0);
+    try {
+      const res = await fetch(`http://localhost:${server.address().port}/api/treks/1/reviews`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
+      });
+      return res.status;
+    } finally {
+      server.close();
+    }
+  };
+  assert.equal(await send({ rating: 9 }), 400);
+  assert.equal(await send({ rating: 4, tags: ['Scary'] }), 400);
+});
