@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../../data/mock_data.dart';
+import '../../data/api.dart';
+import '../../data/models.dart';
 import '../gear/gear_screens.dart';
 import '../map/live_navigation_screen.dart';
 import '../map/offline_maps_screen.dart';
@@ -17,6 +18,26 @@ class TrekDetailScreen extends StatefulWidget {
 
 class _TrekDetailScreenState extends State<TrekDetailScreen> {
   bool _fav = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Api.saved().then((list) {
+      if (mounted) setState(() => _fav = list.any((s) => s.id == widget.trek.id));
+    }, onError: (_) {}); // heart just stays empty if this fails
+  }
+
+  Future<void> _toggleFav() async {
+    final on = !_fav;
+    setState(() => _fav = on);
+    try {
+      await (on ? Api.put('/saved/${widget.trek.id}') : Api.delete('/saved/${widget.trek.id}'));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _fav = !on);
+      showMessage(context, e.message);
+    }
+  }
 
   Widget _quick(IconData icon, String title, String sub, VoidCallback onTap) {
     return Expanded(
@@ -104,9 +125,9 @@ class _TrekDetailScreenState extends State<TrekDetailScreen> {
                         ),
                         const SizedBox(height: 14),
                         Row(children: [
-                          _quick(Icons.local_parking, 'Parking', '2 nearby', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ParkingFinderScreen(showBack: true)))),
+                          _quick(Icons.local_parking, 'Parking', 'Near trailhead', () => Navigator.push(context, MaterialPageRoute(builder: (_) => ParkingFinderScreen(showBack: true, trek: t)))),
                           const SizedBox(width: 10),
-                          _quick(Icons.backpack_outlined, 'Gear shops', '3 nearby', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GearShopsScreen(showBack: true)))),
+                          _quick(Icons.backpack_outlined, 'Gear shops', 'Rent gear', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GearShopsScreen(showBack: true)))),
                         ]),
                         const SizedBox(height: 14),
                         GestureDetector(
@@ -115,7 +136,7 @@ class _TrekDetailScreenState extends State<TrekDetailScreen> {
                             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                             decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
                             child: Row(children: [
-                              const StarRating(5, size: 18),
+                              StarRating(t.rating.round(), size: 18),
                               const SizedBox(width: 12),
                               Text('${t.rating}  ·  ${t.reviews} reviews', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                               const Spacer(),
@@ -131,7 +152,7 @@ class _TrekDetailScreenState extends State<TrekDetailScreen> {
             ),
           ),
           Positioned(top: top + 8, left: 24, child: const BackCircle()),
-          Positioned(top: top + 8, right: 24, child: BackCircle(icon: _fav ? Icons.favorite : Icons.favorite_border, onTap: () => setState(() => _fav = !_fav))),
+          Positioned(top: top + 8, right: 24, child: BackCircle(icon: _fav ? Icons.favorite : Icons.favorite_border, onTap: _toggleFav)),
         ],
       ),
       bottomNavigationBar: Container(

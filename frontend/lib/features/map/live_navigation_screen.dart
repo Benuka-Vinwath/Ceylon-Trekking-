@@ -2,7 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../../data/mock_data.dart';
+import '../../data/api.dart';
+import '../../data/models.dart';
 import 'trek_summary_screen.dart';
 
 class LiveNavigationScreen extends StatefulWidget {
@@ -13,9 +14,20 @@ class LiveNavigationScreen extends StatefulWidget {
 }
 
 class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
-  int _secs = 1 * 3600 + 42 * 60 + 10;
+  int _secs = 0;
   bool _paused = false;
+  bool _saving = false;
   Timer? _timer;
+  final _started = DateTime.now();
+  List<dynamic> _waypoints = []; // [{position, name, lat, lng, elevation_m}] in walking order
+
+  // shortcut: no GPS yet, so progress is elapsed time against the trek's estimated duration; use the geolocator package for real tracking.
+  double get _progress => widget.trek.hours <= 0 ? 0 : (_secs / (widget.trek.hours * 3600)).clamp(0, 1).toDouble();
+
+  int get _gain {
+    final e = _waypoints.map((w) => w['elevation_m']).whereType<int>().toList();
+    return e.length < 2 ? 0 : (e.last - e.first).clamp(0, 9000);
+  }
 
   @override
   void initState() {
@@ -23,6 +35,29 @@ class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!_paused && mounted) setState(() => _secs++);
     });
+    Api.get('/treks/${widget.trek.id}/route').then((w) {
+      if (mounted) setState(() => _waypoints = w);
+    }, onError: (_) {}); // the screen still works without waypoints
+  }
+
+  Future<void> _finish() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final hike = await Api.post('/hikes', {
+        'trek_id': widget.trek.id,
+        'distance_km': double.parse((widget.trek.km * _progress).toStringAsFixed(2)).clamp(0.01, 500),
+        'duration_seconds': _secs < 1 ? 1 : _secs,
+        'elevation_gain_m': (_gain * _progress).round(),
+        'started_at': _started.toUtc().toIso8601String(),
+      });
+      if (!mounted) return;
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => TrekSummaryScreen(trek: widget.trek, hike: hike)));
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      showMessage(context, e.message);
+    }
   }
 
   @override
@@ -50,10 +85,14 @@ class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final pct = (_progress * 100).round();
+    // the next waypoint is the first one not yet reached, assuming waypoints are evenly spaced
+    final reached = (_progress * (_waypoints.length - 1)).floor();
+    final next = _waypoints.isEmpty ? null : _waypoints[(reached + 1).clamp(0, _waypoints.length - 1)];
     return Scaffold(
       body: Stack(
         children: [
-          const Positioned.fill(child: FakeMap(route: true, progress: 0.38, routeInsets: EdgeInsets.only(top: 190, bottom: 270, left: 10, right: 10))),
+          Positioned.fill(child: FakeMap(route: true, progress: _progress, routeInsets: EdgeInsets.only(top: 190, bottom: 270, left: 10, right: 10))),
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
@@ -84,10 +123,10 @@ class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
                       Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.tint, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.arrow_upward, color: AppColors.primary)),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: const [
-                          Text('Next: Seetha Gangula', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                          SizedBox(height: 2),
-                          Text('1.2 km ahead · +180 m elevation', style: AppText.small),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(next == null ? widget.trek.name : 'Next: ${next['name']}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                          const SizedBox(height: 2),
+                          Text(next == null ? 'No route points for this trek yet' : 'Elevation ${next['elevation_m']} m', style: AppText.small),
                         ]),
                       ),
                     ]),
@@ -110,12 +149,16 @@ class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
                   children: [
                     Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.border, borderRadius: BorderRadius.circular(2))),
                     const SizedBox(height: 18),
-                    Row(children: [_stat('4.2 km', 'Distance'), _stat(_fmt(_secs), _paused ? 'Paused' : 'Time'), _stat('1,320 m', 'Elevation')]),
+                    Row(children: [
+                      _stat('${(widget.trek.km * _progress).toStringAsFixed(1)} km', 'Distance'),
+                      _stat(_fmt(_secs), _paused ? 'Paused' : 'Time'),
+                      _stat('+${(_gain * _progress).round()} m', 'Elevation'),
+                    ]),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('38% of route', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                        Text('$pct% of route', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(color: AppColors.tint, borderRadius: BorderRadius.circular(13)),
@@ -124,17 +167,17 @@ class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    ClipRRect(borderRadius: BorderRadius.circular(4), child: const LinearProgressIndicator(value: 0.38, minHeight: 8, backgroundColor: AppColors.border, color: AppColors.primary)),
+                    ClipRRect(borderRadius: BorderRadius.circular(4), child: LinearProgressIndicator(value: _progress, minHeight: 8, backgroundColor: AppColors.border, color: AppColors.primary)),
                     const SizedBox(height: 18),
                     Row(children: [
                       Expanded(child: AppButton(label: _paused ? 'Resume' : 'Pause', style: BtnStyle.white, icon: _paused ? Icons.play_arrow : Icons.pause, onTap: () => setState(() => _paused = !_paused))),
                       const SizedBox(width: 12),
                       Expanded(
                         child: AppButton(
-                          label: 'Finish',
+                          label: _saving ? 'Saving…' : 'Finish',
                           style: BtnStyle.danger,
                           icon: Icons.stop,
-                          onTap: () => Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => TrekSummaryScreen(trek: widget.trek))),
+                          onTap: _finish,
                         ),
                       ),
                     ]),

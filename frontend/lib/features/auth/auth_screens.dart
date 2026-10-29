@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
+import '../../data/api.dart';
 import '../shell/main_shell.dart';
 
 void _go(BuildContext context, Widget screen) {
   Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => screen));
+}
+
+// Runs a login/signup call; on success opens the app, on failure shows the server's message.
+Future<void> _submit(BuildContext context, Future<void> Function() call) async {
+  try {
+    await call();
+    if (context.mounted) goToMain(context);
+  } on ApiException catch (e) {
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+  }
 }
 
 // ───────── Splash ─────────
@@ -200,8 +211,23 @@ class _ObPage extends StatelessWidget {
 }
 
 // ───────── Login ─────────
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -218,13 +244,13 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 8),
               const Text('Log in to continue your trekking journey.', style: TextStyle(fontSize: 15, color: AppColors.muted)),
               const SizedBox(height: 28),
-              const AppField(label: 'Email', hint: 'you@example.com'),
+              AppField(label: 'Email', hint: 'you@example.com', controller: _email),
               const SizedBox(height: 18),
-              const AppField(label: 'Password', hint: '••••••••', obscure: true),
+              AppField(label: 'Password', hint: '••••••••', obscure: true, controller: _password),
               const SizedBox(height: 12),
               const Align(alignment: Alignment.centerRight, child: Text('Forgot password?', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary))),
               const SizedBox(height: 24),
-              AppButton(label: 'Log In', onTap: () => goToMain(context)),
+              AppButton(label: 'Log In', onTap: () => _submit(context, () => Api.login(_email.text.trim(), _password.text))),
               const SizedBox(height: 20),
               Row(children: const [
                 Expanded(child: Divider(color: AppColors.border)),
@@ -257,6 +283,17 @@ class SignUpScreen extends StatefulWidget {
 
 class _SignUpScreenState extends State<SignUpScreen> {
   String _role = 'Trekker';
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
 
   Widget _roleBtn(String label, IconData icon) {
     final on = _role == label;
@@ -299,17 +336,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 8),
               const Text('Join the community of Sri Lankan trekkers.', style: TextStyle(fontSize: 15, color: AppColors.muted)),
               const SizedBox(height: 24),
-              const AppField(label: 'Full name', hint: 'Your name'),
+              AppField(label: 'Full name', hint: 'Your name', controller: _name),
               const SizedBox(height: 16),
-              const AppField(label: 'Email', hint: 'you@example.com'),
+              AppField(label: 'Email', hint: 'you@example.com', controller: _email),
               const SizedBox(height: 16),
-              const AppField(label: 'Password', hint: 'At least 8 characters', obscure: true),
+              AppField(label: 'Password', hint: 'At least 8 characters', obscure: true, controller: _password),
               const SizedBox(height: 18),
               const Text('I am a', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
               const SizedBox(height: 8),
               Row(children: [_roleBtn('Trekker', Icons.hiking), const SizedBox(width: 12), _roleBtn('Shop Owner', Icons.storefront)]),
               const SizedBox(height: 24),
-              AppButton(label: 'Create Account', onTap: () => goToMain(context)),
+              AppButton(
+                label: 'Create Account',
+                onTap: () => _submit(context, () => Api.signup(_name.text.trim(), _email.text.trim(), _password.text, _role == 'Shop Owner' ? 'shop_owner' : 'trekker')),
+              ),
               const SizedBox(height: 14),
               const Text('By signing up you agree to our Terms & Privacy Policy.', textAlign: TextAlign.center, style: AppText.small),
               const SizedBox(height: 24),

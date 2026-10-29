@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../../data/mock_data.dart';
+import '../../data/api.dart';
+import '../../data/models.dart';
 import 'search_screen.dart';
 import 'trek_detail_screen.dart';
 
-void openTrek(BuildContext context, Trek t) {
-  Navigator.push(context, MaterialPageRoute(builder: (_) => TrekDetailScreen(trek: t)));
-}
+Future<void> openTrek(BuildContext context, Trek t) => Navigator.push(context, MaterialPageRoute(builder: (_) => TrekDetailScreen(trek: t)));
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,10 +16,32 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _filter = 'All';
+  List<Trek> _treks = [];
+  String? _error;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      _treks = await Api.treks();
+    } on ApiException catch (e) {
+      _error = e.message;
+    }
+    if (mounted) setState(() => _loading = false);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final list = _filter == 'All' ? treks : treks.where((t) => t.difficulty == _filter).toList();
+    final list = _filter == 'All' ? _treks : _treks.where((t) => t.difficulty == _filter).toList();
     return Scaffold(
       body: SafeArea(
         child: ListView(
@@ -40,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  const CircleAvatar(radius: 20, backgroundColor: AppColors.primary, child: Text('S', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16))),
+                  CircleAvatar(radius: 20, backgroundColor: AppColors.primary, child: Text(userInitial(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16))),
                 ],
               ),
             ),
@@ -81,7 +102,14 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 22),
             const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: SectionHeader('Featured treks', action: 'See all')),
             const SizedBox(height: 14),
-            if (list.isEmpty)
+            if (_loading)
+              const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+            else if (_error != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                child: Column(children: [Text(_error!, style: AppText.small), TextButton(onPressed: _load, child: const Text('Retry'))]),
+              )
+            else if (list.isEmpty)
               const Padding(padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24), child: Text('No treks match this filter.', style: AppText.small))
             else
               SizedBox(

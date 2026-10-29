@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../../data/mock_data.dart';
+import '../../data/models.dart';
 import '../treks/reviews_screen.dart';
 
 class TrekSummaryScreen extends StatelessWidget {
   final Trek trek;
-  const TrekSummaryScreen({super.key, required this.trek});
+  final Map<String, dynamic> hike; // the saved hike returned by POST /api/hikes
+  const TrekSummaryScreen({super.key, required this.trek, required this.hike});
+
+  String _time(int s) => '${s ~/ 3600}:${((s % 3600) ~/ 60).toString().padLeft(2, '0')}:${(s % 60).toString().padLeft(2, '0')}';
 
   Widget _stat(String value, String label) {
     return Container(
@@ -40,11 +43,15 @@ class TrekSummaryScreen extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text('${trek.name} · Today', style: const TextStyle(fontSize: 13, color: AppColors.muted)),
                     const SizedBox(height: 22),
-                    Row(children: [Expanded(child: _stat('11.0 km', 'Distance')), const SizedBox(width: 12), Expanded(child: _stat('5:12:40', 'Time'))]),
+                    Row(children: [Expanded(child: _stat('${fmtNum(hike['distance_km'])} km', 'Distance')), const SizedBox(width: 12), Expanded(child: _stat(_time(hike['duration_seconds']), 'Time'))]),
                     const SizedBox(height: 12),
-                    Row(children: [Expanded(child: _stat('1,380 m', 'Elevation gain')), const SizedBox(width: 12), Expanded(child: _stat('28 min/km', 'Avg pace'))]),
+                    Row(children: [
+                      Expanded(child: _stat('${hike['elevation_gain_m']} m', 'Elevation gain')),
+                      const SizedBox(width: 12),
+                      Expanded(child: _stat('${fmtNum(hike['avg_pace_min_per_km'])} min/km', 'Avg pace')),
+                    ]),
                     const SizedBox(height: 18),
-                    const Text('Your recorded path is saved on this device and will sync when you are back online.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.muted, height: 1.5)),
+                    const Text('Your hike is saved to your profile.', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: AppColors.muted, height: 1.5)),
                     const SizedBox(height: 22),
                     AppButton(label: 'Rate this trek', icon: Icons.star_rounded, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => WriteReviewScreen(trek: trek)))),
                     const SizedBox(height: 12),

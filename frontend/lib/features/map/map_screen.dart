@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme.dart';
 import '../../core/widgets.dart';
-import '../../data/mock_data.dart';
+import '../../data/api.dart';
+import '../../data/models.dart';
 import '../treks/home_screen.dart';
 import '../treks/search_screen.dart';
 
@@ -30,7 +31,6 @@ class _MapScreenState extends State<MapScreen> {
     if (_layers.contains('Gear shops')) {
       pins.addAll(const [MapPin(.16, .62, AppColors.purple, Icons.backpack), MapPin(.58, .22, AppColors.purple, Icons.backpack)]);
     }
-    final trek = treks[1];
     return Scaffold(
       body: Stack(
         children: [
@@ -77,10 +77,22 @@ class _MapScreenState extends State<MapScreen> {
             ),
           ),
           Positioned(
-            left: 24,
-            right: 24,
+            left: 0,
+            right: 0,
             bottom: 20,
-            child: GestureDetector(
+            height: 130,
+            // swipe sideways through the treks
+            child: Loader<List<Trek>>(load: Api.treks, builder: (treks, _) => PageView(controller: PageController(viewportFraction: .88), children: treks.map((t) => _card(t)).toList())),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _card(Trek trek) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: GestureDetector(
               onTap: () => openTrek(context, trek),
               child: Container(
                 padding: const EdgeInsets.all(12),
@@ -107,9 +119,6 @@ class _MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
-          ),
-        ],
-      ),
     );
   }
 }

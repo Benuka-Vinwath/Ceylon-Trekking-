@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../data/mock_data.dart';
+import '../data/api.dart';
+import '../data/models.dart';
 import 'theme.dart';
 
 const List<BoxShadow> kShadow = [BoxShadow(color: Color(0x1F000000), blurRadius: 12, offset: Offset(0, 3))];
@@ -159,6 +160,50 @@ class StarRating extends StatelessWidget {
     );
   }
 }
+
+// Runs load() once and shows a spinner, the error with a Retry button, or builder(data, reload).
+class Loader<T> extends StatefulWidget {
+  final Future<T> Function() load;
+  final Widget Function(T data, VoidCallback reload) builder;
+  const Loader({super.key, required this.load, required this.builder});
+  @override
+  State<Loader<T>> createState() => _LoaderState<T>();
+}
+
+class _LoaderState<T> extends State<Loader<T>> {
+  late Future<T> _future = widget.load();
+
+  void _reload() => setState(() => _future = widget.load());
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<T>(
+      future: _future,
+      builder: (context, s) {
+        if (s.connectionState != ConnectionState.done) return const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator()));
+        if (s.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text('${s.error}', textAlign: TextAlign.center, style: AppText.small),
+                TextButton(onPressed: _reload, child: const Text('Retry')),
+              ]),
+            ),
+          );
+        }
+        return widget.builder(s.data as T, _reload);
+      },
+    );
+  }
+}
+
+String userInitial() {
+  final name = (Api.user?['full_name'] ?? '') as String;
+  return name.isEmpty ? '?' : name[0].toUpperCase();
+}
+
+void showMessage(BuildContext context, String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
 class AppField extends StatelessWidget {
   final String label, hint;
