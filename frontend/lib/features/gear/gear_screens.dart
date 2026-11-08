@@ -27,9 +27,9 @@ class GearShopsScreen extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.all(Radius.circular(20)),
                   child: FakeMap(me: Offset(.35, .75), pins: [
-                    MapPin(.18, .3, AppColors.purple, Icons.backpack),
-                    MapPin(.5, .5, AppColors.purple, Icons.backpack),
-                    MapPin(.76, .28, AppColors.purple, Icons.backpack),
+                    MapPin(.18, .3, AppColors.accent, Icons.backpack),
+                    MapPin(.5, .5, AppColors.accent, Icons.backpack),
+                    MapPin(.76, .28, AppColors.accent, Icons.backpack),
                   ]),
                 ),
               ),
@@ -40,14 +40,14 @@ class GearShopsScreen extends StatelessWidget {
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+                      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(width: 56, height: 56, decoration: BoxDecoration(color: const Color(0xFFEFE8FA), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.backpack, color: AppColors.purple, size: 26)),
+                              Container(width: 56, height: 56, decoration: BoxDecoration(color: const Color(0xFFFCE9D9), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.backpack, color: AppColors.accent, size: 26)),
                               const SizedBox(width: 14),
                               Expanded(
                                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -58,7 +58,7 @@ class GearShopsScreen extends StatelessWidget {
                                   Text(s.items, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
                                 ]),
                               ),
-                              Row(children: [const Icon(Icons.star_rounded, size: 16, color: AppColors.accent), Text(' ${s.rating}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
+                              Row(children: [const Icon(Icons.star_rounded, size: 16, color: AppColors.star), Text(' ${s.rating}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
                             ],
                           ),
                           const SizedBox(height: 10),
@@ -85,10 +85,10 @@ class ShopDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+
       body: Stack(
         children: [
-          const Positioned(top: 0, left: 0, right: 0, height: 230, child: MountainScene(colors: [Color(0xFFC9B6EA), Color(0xFF6B4BB0)])),
+          const Positioned(top: 0, left: 0, right: 0, height: 230, child: MountainScene(colors: [Color(0xFF9DBFC9), Color(0xFFDDE6D8)])),
           Positioned.fill(
             child: SingleChildScrollView(
               child: Column(
@@ -97,7 +97,7 @@ class ShopDetailScreen extends StatelessWidget {
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                    decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+                    decoration: const BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

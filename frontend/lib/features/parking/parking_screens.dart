@@ -19,7 +19,7 @@ class _ParkingFinderScreenState extends State<ParkingFinderScreen> {
   Widget build(BuildContext context) {
     final title = widget.trek == null ? 'Parking near treks' : 'Parking near ${widget.trek!.name}';
     return Scaffold(
-      backgroundColor: Colors.white,
+
       body: Stack(
         children: [
           const Positioned(
@@ -30,11 +30,16 @@ class _ParkingFinderScreenState extends State<ParkingFinderScreen> {
             child: FakeMap(me: Offset(.28, .8), pins: [
               MapPin(.22, .45, AppColors.info, Icons.local_parking),
               MapPin(.64, .56, AppColors.info, Icons.local_parking),
-              MapPin(.44, .74, AppColors.primary, Icons.terrain),
+              MapPin(.44, .74, Color(0xFF2E9E6B), Icons.terrain),
               MapPin(.78, .34, AppColors.info, Icons.local_parking),
             ]),
           ),
-          SafeArea(
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            // positioned so the Stack fills the screen instead of shrinking to this bar's height
+            child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
               child: Row(
@@ -44,7 +49,7 @@ class _ParkingFinderScreenState extends State<ParkingFinderScreen> {
                     child: Container(
                       height: 48,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: kShadow),
+                      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(24), boxShadow: kShadow),
                       child: Row(children: [const Icon(Icons.search, size: 20, color: AppColors.muted), const SizedBox(width: 8), Expanded(child: Text(title, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: AppColors.muted)))]),
                     ),
                   ),
@@ -52,10 +57,11 @@ class _ParkingFinderScreenState extends State<ParkingFinderScreen> {
               ),
             ),
           ),
+          ),
           Positioned.fill(
             top: 330,
             child: Container(
-              decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
+              decoration: const BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
               child: Loader<List<ParkingLot>>(
                 load: () => Api.parking(widget.trek),
                 builder: (lots, _) {
@@ -81,7 +87,7 @@ class _ParkingFinderScreenState extends State<ParkingFinderScreen> {
                             child: Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+                              decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -133,7 +139,7 @@ class ParkingDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+
       body: Stack(
         children: [
           const Positioned(top: 0, left: 0, right: 0, height: 330, child: FakeMap(me: Offset(.26, .75), pins: [MapPin(.5, .45, AppColors.info, Icons.local_parking)])),
@@ -141,7 +147,7 @@ class ParkingDetailScreen extends StatelessWidget {
           Positioned.fill(
             top: 290,
             child: Container(
-              decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
+              decoration: const BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
                 child: Column(

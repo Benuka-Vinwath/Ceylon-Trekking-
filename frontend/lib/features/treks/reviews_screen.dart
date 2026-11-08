@@ -12,7 +12,7 @@ class ReviewsScreen extends StatelessWidget {
     final avg = reviews.isEmpty ? 0.0 : reviews.map((r) => r.stars).reduce((a, b) => a + b) / reviews.length;
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(20)),
       child: Row(
         children: [
           Column(
@@ -54,7 +54,7 @@ class ReviewsScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18)),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -150,7 +150,7 @@ class _WriteReviewScreenState extends State<WriteReviewScreen> {
   Widget build(BuildContext context) {
     final t = widget.trek;
     return Scaffold(
-      backgroundColor: Colors.white,
+
       body: SafeArea(
         child: Column(
           children: [

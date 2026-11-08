@@ -118,7 +118,7 @@ class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
                   const SizedBox(height: 10),
                   Container(
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), boxShadow: kShadow),
+                    decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), boxShadow: kShadow),
                     child: Row(children: [
                       Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.tint, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.arrow_upward, color: AppColors.primary)),
                       const SizedBox(width: 12),
@@ -141,7 +141,7 @@ class _LiveNavigationScreenState extends State<LiveNavigationScreen> {
             bottom: 0,
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
-              decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
+              decoration: const BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
               child: SafeArea(
                 top: false,
                 child: Column(

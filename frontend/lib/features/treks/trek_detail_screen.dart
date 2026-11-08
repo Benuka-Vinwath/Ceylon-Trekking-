@@ -39,28 +39,29 @@ class _TrekDetailScreenState extends State<TrekDetailScreen> {
     }
   }
 
-  Widget _quick(IconData icon, String title, String sub, VoidCallback onTap) {
+  void _push(Widget screen) => Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+
+  Widget _stat(IconData icon, String value, String label, {Color? color}) {
+    return Expanded(
+      child: Column(children: [
+        Icon(icon, size: 22, color: color ?? AppColors.primary),
+        const SizedBox(height: 6),
+        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 2),
+        Text(label, style: AppText.small),
+      ]),
+    );
+  }
+
+  Widget _tab(String label, {VoidCallback? onTap}) {
+    final on = onTap == null; // Overview is the current section, the others open their own screen
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(14)),
-          child: Row(
-            children: [
-              Icon(icon, color: AppColors.primary, size: 22),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                    Text(sub, style: AppText.small),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 9),
+          decoration: BoxDecoration(color: on ? AppColors.primary : Colors.transparent, borderRadius: BorderRadius.circular(10)),
+          child: Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: on ? Colors.white : AppColors.muted)),
         ),
       ),
     );
@@ -70,42 +71,61 @@ class _TrekDetailScreenState extends State<TrekDetailScreen> {
   Widget build(BuildContext context) {
     final t = widget.trek;
     final top = MediaQuery.of(context).padding.top;
+    const divider = SizedBox(height: 40, child: VerticalDivider(color: AppColors.border, width: 1));
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Positioned(top: 0, left: 0, right: 0, height: 290, child: MountainScene(colors: t.colors)),
+          Positioned(top: 0, left: 0, right: 0, height: 320, child: MountainScene(colors: t.colors)),
           Positioned.fill(
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  const SizedBox(height: 250),
+                  const SizedBox(height: 280),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-                    decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+                    padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+                    decoration: const BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(t.name, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                        Text(t.name, style: AppText.h1),
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          const Icon(Icons.star_rounded, size: 18, color: AppColors.star),
+                          Text(' ${t.rating}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.star)),
+                          Text('  (${t.reviews} reviews)', style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                        ]),
                         const SizedBox(height: 6),
                         Row(children: [
-                          const Icon(Icons.place, size: 14, color: AppColors.muted),
-                          Text(' ${t.region}   ', style: const TextStyle(fontSize: 13, color: AppColors.muted)),
-                          const Icon(Icons.star_rounded, size: 16, color: AppColors.accent),
-                          Text(' ${t.rating} (${t.reviews})', style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                          const Icon(Icons.place, size: 15, color: AppColors.primary),
+                          Text(' ${t.region}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.primary)),
                         ]),
                         const SizedBox(height: 18),
-                        Row(children: [
-                          Expanded(child: StatBox('Distance', t.distance)),
-                          const SizedBox(width: 8),
-                          Expanded(child: StatBox('Duration', t.duration)),
-                          const SizedBox(width: 8),
-                          Expanded(child: StatBox('Elevation', t.elevation)),
-                          const SizedBox(width: 8),
-                          Expanded(child: StatBox('Level', t.difficulty, valueColor: DifficultyBadge.fg(t.difficulty))),
-                        ]),
-                        const SizedBox(height: 22),
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                          child: Row(children: [
+                            _stat(Icons.route, t.distance, 'Distance'),
+                            divider,
+                            _stat(Icons.schedule, t.duration, 'Duration'),
+                            divider,
+                            _stat(Icons.hiking, t.difficulty, 'Difficulty', color: AppColors.accent),
+                            divider,
+                            _stat(Icons.landscape_outlined, t.elevation, 'Elevation'),
+                          ]),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppColors.border)),
+                          child: Row(children: [
+                            _tab('Overview'),
+                            _tab('Parking', onTap: () => _push(ParkingFinderScreen(showBack: true, trek: t))),
+                            _tab('Gear', onTap: () => _push(const GearShopsScreen(showBack: true))),
+                            _tab('Reviews', onTap: () => _push(ReviewsScreen(trek: t))),
+                          ]),
+                        ),
+                        const SizedBox(height: 18),
                         const Text('About', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 8),
                         Text(t.about, style: const TextStyle(fontSize: 13, color: AppColors.muted, height: 1.55)),
@@ -123,27 +143,6 @@ class _TrekDetailScreenState extends State<TrekDetailScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 14),
-                        Row(children: [
-                          _quick(Icons.local_parking, 'Parking', 'Near trailhead', () => Navigator.push(context, MaterialPageRoute(builder: (_) => ParkingFinderScreen(showBack: true, trek: t)))),
-                          const SizedBox(width: 10),
-                          _quick(Icons.backpack_outlined, 'Gear shops', 'Rent gear', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GearShopsScreen(showBack: true)))),
-                        ]),
-                        const SizedBox(height: 14),
-                        GestureDetector(
-                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ReviewsScreen(trek: t))),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
-                            child: Row(children: [
-                              StarRating(t.rating.round(), size: 18),
-                              const SizedBox(width: 12),
-                              Text('${t.rating}  ·  ${t.reviews} reviews', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                              const Spacer(),
-                              const Icon(Icons.chevron_right, color: AppColors.muted),
-                            ]),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -157,14 +156,14 @@ class _TrekDetailScreenState extends State<TrekDetailScreen> {
       ),
       bottomNavigationBar: Container(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 12),
-        decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: AppColors.border))),
+        decoration: const BoxDecoration(color: AppColors.card, border: Border(top: BorderSide(color: AppColors.border))),
         child: SafeArea(
           top: false,
           child: Row(
             children: [
-              Expanded(child: AppButton(label: 'Offline map', style: BtnStyle.outline, icon: Icons.download_rounded, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineMapsScreen())))),
+              Expanded(child: AppButton(label: 'Offline map', style: BtnStyle.green, icon: Icons.download_rounded, onTap: () => _push(const OfflineMapsScreen()))),
               const SizedBox(width: 12),
-              Expanded(child: AppButton(label: 'Start Trek', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => LiveNavigationScreen(trek: t))))),
+              Expanded(child: AppButton(label: 'Start Trek', icon: Icons.navigation_outlined, onTap: () => _push(LiveNavigationScreen(trek: t)))),
             ],
           ),
         ),

@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 double toDouble(dynamic v) => v == null ? 0 : double.parse(v.toString());
 String fmtNum(dynamic v) => v.toString().replaceAll(RegExp(r'\.0+$'), '');
 
+// sky gradients (top, horizon) behind the painted mountains: misty morning, sunrise, blue hour, golden hour
 const _palettes = [
-  [Color(0xFF9CC7AE), Color(0xFF2E7D5B)],
-  [Color(0xFFF4CB8B), Color(0xFFC9792B)],
-  [Color(0xFFA9C9E6), Color(0xFF2F6F9F)],
-  [Color(0xFFB5D9C4), Color(0xFF3E8E6A)],
+  [Color(0xFF9DBFC9), Color(0xFFDDE6D8)],
+  [Color(0xFFF1B27A), Color(0xFFF8DDB0)],
+  [Color(0xFF6F93B5), Color(0xFFBFD3DE)],
+  [Color(0xFFE8C27C), Color(0xFFF3E2B8)],
 ];
 
 class Trek {

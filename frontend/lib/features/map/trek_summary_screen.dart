@@ -26,7 +26,7 @@ class TrekSummaryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+
       body: Stack(
         children: [
           const Positioned(top: 0, left: 0, right: 0, height: 300, child: FakeMap(route: true, progress: 1, routeInsets: EdgeInsets.fromLTRB(40, 70, 40, 50))),
@@ -35,7 +35,7 @@ class TrekSummaryScreen extends StatelessWidget {
             top: 270,
             child: Container(
               padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
-              decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
+              decoration: const BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.vertical(top: Radius.circular(28)), boxShadow: kShadowUp),
               child: SingleChildScrollView(
                 child: Column(
                   children: [

@@ -39,96 +39,131 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() => _loading = false);
   }
 
+  static const _levels = {'All': Icons.apps, 'Easy': Icons.directions_walk, 'Moderate': Icons.hiking, 'Hard': Icons.terrain};
+
+  void _openSearch() => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen()));
+
+  Widget _header(String title, {VoidCallback? onSeeAll}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(children: [
+        Expanded(child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white))),
+        if (onSeeAll != null) GestureDetector(onTap: onSeeAll, child: const Text('See All', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.accent))),
+      ]),
+    );
+  }
+
+  Widget _level(String label, IconData icon) {
+    final on = _filter == label;
+    return GestureDetector(
+      onTap: () => setState(() => _filter = label),
+      child: Column(children: [
+        Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(color: on ? AppColors.accent : AppColors.darkCard, borderRadius: BorderRadius.circular(16)),
+          child: Icon(icon, color: Colors.white),
+        ),
+        const SizedBox(height: 6),
+        Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: on ? Colors.white : AppColors.onDark)),
+      ]),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final list = _filter == 'All' ? _treks : _treks.where((t) => t.difficulty == _filter).toList();
+    final popular = [...list]..sort((a, b) => b.rating.compareTo(a.rating));
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good Morning,' : (hour < 17 ? 'Good Afternoon,' : 'Good Evening,');
+    final first = ((Api.user?['full_name'] ?? '') as String).split(' ').first;
+    const onDarkSmall = TextStyle(fontSize: 13, color: AppColors.onDark);
     return Scaffold(
+      backgroundColor: AppColors.dark,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.only(bottom: 24),
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              padding: const EdgeInsets.fromLTRB(24, 14, 24, 0),
               child: Row(
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Ayubowan 👋', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.muted)),
-                        SizedBox(height: 2),
-                        Text('Where to next?', style: AppText.h1),
-                      ],
-                    ),
-                  ),
-                  CircleAvatar(radius: 20, backgroundColor: AppColors.primary, child: Text(userInitial(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16))),
+                  const Icon(Icons.landscape_outlined, color: Colors.white, size: 26),
+                  const SizedBox(width: 8),
+                  const Expanded(child: Text('CEYLON TREKKING', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 2, color: Colors.white))),
+                  const Icon(Icons.notifications_none, color: Colors.white),
+                  const SizedBox(width: 14),
+                  CircleAvatar(radius: 18, backgroundColor: AppColors.accent, child: Text(userInitial(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 22, 24, 0),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(greeting, style: const TextStyle(fontSize: 15, color: AppColors.onDark)),
+                const SizedBox(height: 2),
+                Text('${first.isEmpty ? 'Explorer' : first}!', style: AppText.display.copyWith(color: Colors.white)),
+              ]),
+            ),
+            const SizedBox(height: 18),
             GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SearchScreen())),
+              onTap: _openSearch,
               child: Container(
-                height: 52,
+                height: 50,
                 margin: const EdgeInsets.symmetric(horizontal: 24),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), border: Border.all(color: AppColors.border, width: 1.5)),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 18),
-                    const Icon(Icons.search, color: AppColors.muted),
-                    const SizedBox(width: 10),
-                    const Expanded(child: Text('Search treks, places…', style: TextStyle(fontSize: 15, color: AppColors.muted))),
-                    Container(
-                      margin: const EdgeInsets.all(5),
-                      width: 40,
-                      height: 40,
-                      decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                      child: const Icon(Icons.tune, color: Colors.white, size: 18),
-                    ),
-                  ],
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14)),
+                child: const Row(children: [
+                  Icon(Icons.search, color: AppColors.muted),
+                  SizedBox(width: 10),
+                  Expanded(child: Text('Search treks, locations…', style: TextStyle(fontSize: 15, color: AppColors.muted))),
+                  Icon(Icons.tune, color: AppColors.primary, size: 20),
+                ]),
               ),
             ),
-            const SizedBox(height: 16),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: ['All', 'Easy', 'Moderate', 'Hard']
-                    .map((l) => Padding(padding: const EdgeInsets.only(right: 8), child: AppChip(label: l, selected: _filter == l, onTap: () => setState(() => _filter = l))))
-                    .toList(),
-              ),
-            ),
-            const SizedBox(height: 22),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: SectionHeader('Featured treks', action: 'See all')),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
             if (_loading)
               const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
             else if (_error != null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: Column(children: [Text(_error!, style: AppText.small), TextButton(onPressed: _load, child: const Text('Retry'))]),
+                padding: const EdgeInsets.all(24),
+                child: Column(children: [Text(_error!, style: onDarkSmall), TextButton(onPressed: _load, child: const Text('Retry', style: TextStyle(color: AppColors.accent)))]),
               )
-            else if (list.isEmpty)
-              const Padding(padding: EdgeInsets.symmetric(horizontal: 24, vertical: 24), child: Text('No treks match this filter.', style: AppText.small))
-            else
-              SizedBox(
-                height: 200,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
+            else ...[
+              if (popular.isNotEmpty)
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: list.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 12),
-                  itemBuilder: (_, i) => TrekCard(trek: list[i], onTap: () => openTrek(context, list[i])),
+                  child: TrekCard(trek: popular.first, width: MediaQuery.of(context).size.width - 48, height: 190, onTap: () => openTrek(context, popular.first)),
                 ),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: _levels.entries.map((e) => _level(e.key, e.value)).toList()),
               ),
-            const SizedBox(height: 22),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: SectionHeader('Nearby treks')),
-            const SizedBox(height: 14),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(children: list.reversed.map((t) => TrekListTile(trek: t, onTap: () => openTrek(context, t))).toList()),
-            ),
+              const SizedBox(height: 24),
+              _header('Popular Treks', onSeeAll: _openSearch),
+              const SizedBox(height: 12),
+              if (list.isEmpty)
+                const Padding(padding: EdgeInsets.symmetric(horizontal: 24), child: Text('No treks match this filter.', style: onDarkSmall))
+              else
+                SizedBox(
+                  height: 150,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: popular.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) => TrekCard(trek: popular[i], width: 120, height: 150, onTap: () => openTrek(context, popular[i])),
+                  ),
+                ),
+              const SizedBox(height: 24),
+              _header('All Treks'),
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(children: list.map((t) => TrekListTile(trek: t, onTap: () => openTrek(context, t))).toList()),
+              ),
+            ],
           ],
         ),
       ),

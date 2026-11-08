@@ -31,7 +31,7 @@ class _MainShellState extends State<MainShell> {
         children: const [HomeScreen(), MapScreen(), GearShopsScreen(), ParkingFinderScreen(), ProfileScreen()],
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(color: Colors.white, border: Border(top: BorderSide(color: AppColors.border))),
+        decoration: const BoxDecoration(color: AppColors.card, border: Border(top: BorderSide(color: AppColors.border))),
         child: SafeArea(
           top: false,
           child: SizedBox(

@@ -7,7 +7,8 @@ const List<BoxShadow> kShadow = [BoxShadow(color: Color(0x1F000000), blurRadius:
 const List<BoxShadow> kShadowUp = [BoxShadow(color: Color(0x1F000000), blurRadius: 20, offset: Offset(0, -4))];
 
 // ───────── Buttons ─────────
-enum BtnStyle { primary, outline, danger, white, ghost }
+// primary = orange call-to-action, green = forest green secondary action
+enum BtnStyle { primary, green, outline, danger, white, ghost }
 
 class AppButton extends StatelessWidget {
   final String label;
@@ -15,18 +16,21 @@ class AppButton extends StatelessWidget {
   final BtnStyle style;
   final double height;
   final IconData? icon;
-  const AppButton({super.key, required this.label, this.onTap, this.style = BtnStyle.primary, this.height = 56, this.icon});
+  const AppButton({super.key, required this.label, this.onTap, this.style = BtnStyle.primary, this.height = 54, this.icon});
 
   @override
   Widget build(BuildContext context) {
-    Color bg = AppColors.primary;
+    Color bg = AppColors.accent;
     Color fg = Colors.white;
     BorderSide side = BorderSide.none;
     switch (style) {
       case BtnStyle.primary:
         break;
+      case BtnStyle.green:
+        bg = AppColors.primary;
+        break;
       case BtnStyle.outline:
-        bg = Colors.white;
+        bg = Colors.transparent;
         fg = AppColors.primary;
         side = const BorderSide(color: AppColors.primary, width: 1.5);
         break;
@@ -34,8 +38,9 @@ class AppButton extends StatelessWidget {
         bg = AppColors.danger;
         break;
       case BtnStyle.white:
-        bg = Colors.white;
-        fg = AppColors.dark;
+        bg = AppColors.card;
+        fg = AppColors.text;
+        side = const BorderSide(color: AppColors.border, width: 1.5);
         break;
       case BtnStyle.ghost:
         bg = Colors.transparent;
@@ -50,7 +55,7 @@ class AppButton extends StatelessWidget {
           backgroundColor: bg,
           foregroundColor: fg,
           elevation: 0,
-          shape: StadiumBorder(side: side),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: side),
           padding: const EdgeInsets.symmetric(horizontal: 12),
         ),
         child: Row(
@@ -78,9 +83,9 @@ class AppChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: selected ? null : Border.all(color: AppColors.border, width: 1.5),
+          color: selected ? AppColors.primary : AppColors.card,
+          borderRadius: BorderRadius.circular(10),
+          border: selected ? null : Border.all(color: AppColors.border, width: 1.2),
         ),
         child: Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: selected ? Colors.white : AppColors.text)),
       ),
@@ -128,7 +133,7 @@ class BackCircle extends StatelessWidget {
   final IconData icon;
   final VoidCallback? onTap;
   final Color bg;
-  const BackCircle({super.key, this.icon = Icons.arrow_back, this.onTap, this.bg = Colors.white});
+  const BackCircle({super.key, this.icon = Icons.arrow_back, this.onTap, this.bg = AppColors.card});
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -153,7 +158,7 @@ class StarRating extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(5, (i) {
-        final star = Icon(Icons.star_rounded, size: size, color: i < value ? AppColors.accent : const Color(0xFFD5DCD8));
+        final star = Icon(Icons.star_rounded, size: size, color: i < value ? AppColors.star : const Color(0xFFDCD5C6));
         if (onChanged == null) return star;
         return GestureDetector(onTap: () => onChanged!(i + 1), child: star);
       }),
@@ -206,35 +211,55 @@ String userInitial() {
 void showMessage(BuildContext context, String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
 class AppField extends StatelessWidget {
-  final String label, hint;
-  final bool obscure;
+  final String label, hint; // empty label = no label above the field
+  final bool obscure, dark;
   final int maxLines;
+  final IconData? icon;
   final TextEditingController? controller;
-  const AppField({super.key, required this.label, required this.hint, this.obscure = false, this.maxLines = 1, this.controller});
+  const AppField({super.key, this.label = '', required this.hint, this.obscure = false, this.maxLines = 1, this.controller, this.icon, this.dark = false});
 
   @override
   Widget build(BuildContext context) {
-    OutlineInputBorder b(Color c) => OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide(color: c, width: 1.5));
+    OutlineInputBorder b(Color c) => OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c, width: 1.2));
+    final muted = dark ? const Color(0xFF9FB3A6) : AppColors.muted;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-        const SizedBox(height: 8),
+        if (label.isNotEmpty) ...[Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: dark ? AppColors.onDark : AppColors.text)), const SizedBox(height: 8)],
         TextField(
           controller: controller,
           obscureText: obscure,
           maxLines: obscure ? 1 : maxLines,
+          style: TextStyle(color: dark ? Colors.white : AppColors.text),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: AppColors.muted, fontSize: 15),
+            hintStyle: TextStyle(color: muted, fontSize: 15),
+            prefixIcon: icon == null ? null : Icon(icon, size: 20, color: muted),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: dark ? AppColors.darkCard : AppColors.card,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: b(AppColors.border),
-            enabledBorder: b(AppColors.border),
-            focusedBorder: b(AppColors.primary),
+            border: b(dark ? AppColors.darkCard : AppColors.border),
+            enabledBorder: b(dark ? AppColors.darkCard : AppColors.border),
+            focusedBorder: b(dark ? AppColors.accent : AppColors.primary),
           ),
         ),
+      ],
+    );
+  }
+}
+
+// Mountain outline + "CEYLON / TREKKING" word mark (splash, login).
+class BrandLogo extends StatelessWidget {
+  final double scale;
+  const BrandLogo({super.key, this.scale = 1});
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.landscape_outlined, size: 64 * scale, color: Colors.white),
+        Text('CEYLON', style: TextStyle(fontFamily: 'serif', fontSize: 40 * scale, fontWeight: FontWeight.w600, letterSpacing: 4 * scale, color: Colors.white, height: 1.1)),
+        Text('TREKKING', style: TextStyle(fontSize: 15 * scale, fontWeight: FontWeight.w500, letterSpacing: 9 * scale, color: Colors.white)),
       ],
     );
   }
@@ -265,7 +290,7 @@ class StatBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: BoxDecoration(color: AppColors.bg, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
       child: Column(
         children: [
           Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: valueColor ?? AppColors.text)),
@@ -280,21 +305,30 @@ class StatBox extends StatelessWidget {
 // ───────── Mountain illustration (placeholder for photos) ─────────
 class MountainPainter extends CustomPainter {
   const MountainPainter();
+  // Ridges as (x, y) fractions, back to front; the see-through back ridges fade into the sky like haze.
+  static const _ridges = [
+    [0.0, .55, .12, .42, .22, .5, .38, .22, .5, .4, .62, .3, .78, .48, .9, .38, 1.0, .46],
+    [0.0, .7, .18, .5, .3, .62, .46, .45, .6, .6, .75, .5, .88, .62, 1.0, .55],
+    [0.0, .82, .2, .68, .4, .8, .58, .7, .8, .84, 1.0, .74],
+    [0.0, .95, .25, .86, .5, .94, .75, .88, 1.0, .96],
+  ];
+  static const _ridgeColors = [Color(0x591F4D36), Color(0x991F4D36), AppColors.primary, AppColors.dark];
+
   @override
   void paint(Canvas c, Size s) {
-    void tri(double x1, double y1, double x2, double y2, double x3, double y3, Color col) {
-      final p = Path()
-        ..moveTo(x1, y1)
-        ..lineTo(x2, y2)
-        ..lineTo(x3, y3)
-        ..close();
-      c.drawPath(p, Paint()..color = col);
-    }
-
     final w = s.width, h = s.height;
-    tri(-w * .15, h * 1.1, w * .225, h * .3, w * .6, h * 1.1, const Color(0xFF1F5A44));
-    tri(w * .3, h * 1.05, w * .725, h * .1, w * 1.15, h * 1.05, AppColors.primary);
-    tri(w * .05, h * 1.1, w * .35, h * .55, w * .65, h * 1.1, AppColors.dark);
+    c.drawCircle(Offset(w * .72, h * .3), w * .07, Paint()..color = const Color(0x80FFF3D6));
+    for (var r = 0; r < _ridges.length; r++) {
+      final pts = _ridges[r];
+      final p = Path()..moveTo(0, h);
+      for (var i = 0; i < pts.length; i += 2) {
+        p.lineTo(pts[i] * w, pts[i + 1] * h);
+      }
+      p
+        ..lineTo(w, h)
+        ..close();
+      c.drawPath(p, Paint()..color = _ridgeColors[r]);
+    }
   }
 
   @override
@@ -323,6 +357,20 @@ class MountainScene extends StatelessWidget {
 }
 
 // ───────── Trek cards ─────────
+// Small translucent chip used on top of trek images.
+Widget glassChip(IconData icon, String text, {Color iconColor = Colors.white}) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(color: const Color(0x4D000000), borderRadius: BorderRadius.circular(8)),
+    child: Row(mainAxisSize: MainAxisSize.min, children: [
+      Icon(icon, size: 12, color: iconColor),
+      const SizedBox(width: 4),
+      Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: Colors.white)),
+    ]),
+  );
+}
+
+// Image card with the trek over it. Below 200 px wide it shows the short "popular" layout.
 class TrekCard extends StatelessWidget {
   final Trek trek;
   final VoidCallback onTap;
@@ -331,58 +379,66 @@ class TrekCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final compact = width < 200;
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
         width: width,
         height: height,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(compact ? 14 : 20),
           child: Stack(
             fit: StackFit.expand,
             children: [
               MountainScene(colors: trek.colors),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: height * .6,
-                child: const DecoratedBox(
-                  decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0x00000000), Color(0xBF000000)])),
-                ),
+              const DecoratedBox(
+                decoration: BoxDecoration(gradient: LinearGradient(begin: Alignment.center, end: Alignment.bottomCenter, colors: [Color(0x00000000), Color(0xCC000000)])),
               ),
               Positioned(
-                top: 12,
-                right: 12,
-                child: Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(color: Color(0xE6FFFFFF), shape: BoxShape.circle),
-                  child: const Icon(Icons.favorite_border, size: 20, color: AppColors.text),
-                ),
-              ),
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 14,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DifficultyBadge(trek.difficulty),
-                    const SizedBox(height: 8),
-                    Text(trek.name, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.place, size: 14, color: Color(0xFFE4EFE8)),
-                        Text(' ${trek.region}    ', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFE4EFE8))),
-                        const Icon(Icons.star_rounded, size: 14, color: AppColors.accent),
-                        Text(' ${trek.rating}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Color(0xFFE4EFE8))),
-                      ],
-                    ),
-                  ],
-                ),
+                left: compact ? 10 : 16,
+                right: compact ? 10 : 16,
+                bottom: compact ? 10 : 14,
+                child: compact
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(trek.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
+                          const SizedBox(height: 4),
+                          Row(children: [
+                            Text(trek.distance, style: const TextStyle(fontSize: 11, color: AppColors.onDark)),
+                            const Spacer(),
+                            const Icon(Icons.star_rounded, size: 13, color: AppColors.star),
+                            Text(' ${trek.rating}', style: const TextStyle(fontSize: 11, color: AppColors.star, fontWeight: FontWeight.w600)),
+                          ]),
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(trek.name, maxLines: 2, style: const TextStyle(fontFamily: 'serif', fontSize: 22, fontWeight: FontWeight.w600, color: Colors.white, height: 1.15)),
+                                const SizedBox(height: 8),
+                                Wrap(spacing: 6, runSpacing: 6, children: [
+                                  glassChip(Icons.route, trek.distance),
+                                  glassChip(Icons.schedule, trek.duration),
+                                  glassChip(Icons.terrain, trek.difficulty, iconColor: AppColors.star),
+                                ]),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: const BoxDecoration(color: AppColors.accent, shape: BoxShape.circle),
+                            child: const Icon(Icons.arrow_forward, size: 20, color: Colors.white),
+                          ),
+                        ],
+                      ),
               ),
             ],
           ),
@@ -400,34 +456,35 @@ class TrekListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Widget meta(IconData i, String t) => Row(mainAxisSize: MainAxisSize.min, children: [Icon(i, size: 13, color: AppColors.muted), const SizedBox(width: 4), Text(t, style: const TextStyle(fontSize: 12, color: AppColors.muted))]);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
         child: Row(
           children: [
-            SizedBox(width: 76, height: 76, child: MountainScene(colors: trek.colors, radius: 14)),
+            SizedBox(width: 84, height: 84, child: MountainScene(colors: trek.colors, radius: 12)),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(trek.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.title),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(trek.region, style: AppText.small),
-                  const SizedBox(height: 6),
-                  Text('${trek.distance}  ·  ${trek.duration}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                  const SizedBox(height: 10),
+                  Row(children: [meta(Icons.route, trek.distance), const SizedBox(width: 14), meta(Icons.schedule, trek.duration)]),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                saved ? const Icon(Icons.favorite, size: 20, color: AppColors.danger) : DifficultyBadge(trek.difficulty),
-                const SizedBox(height: 10),
-                Row(children: [const Icon(Icons.star_rounded, size: 16, color: AppColors.accent), Text(' ${trek.rating}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
+                Icon(saved ? Icons.favorite : Icons.favorite_border, size: 22, color: saved ? AppColors.accent : AppColors.muted),
+                const SizedBox(height: 22),
+                Row(children: [const Icon(Icons.star_rounded, size: 16, color: AppColors.star), Text(' ${trek.rating}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
               ],
             ),
           ],
@@ -481,26 +538,27 @@ class _MapPainter extends CustomPainter {
   @override
   void paint(Canvas c, Size s) {
     final w = s.width, h = s.height;
-    c.drawRect(Offset.zero & s, Paint()..color = const Color(0xFFE9EFE6));
-    final forest = Paint()..color = const Color(0xFFD3E8D5);
+    // dark "satellite" terrain to match the forest theme
+    c.drawRect(Offset.zero & s, Paint()..color = const Color(0xFF2C4A35));
+    final forest = Paint()..color = const Color(0xFF223D2B);
     c.drawOval(Rect.fromLTWH(-w * .15, h * .08, w * .75, h * .4), forest);
     c.drawOval(Rect.fromLTWH(w * .5, h * .55, w * .8, h * .5), forest);
-    c.drawOval(Rect.fromLTWH(w * .55, -h * .05, w * .6, h * .3), Paint()..color = const Color(0xFFC2DDC8));
+    c.drawOval(Rect.fromLTWH(w * .55, -h * .05, w * .6, h * .3), Paint()..color = const Color(0xFF3D5E45));
     final cont = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
-      ..color = const Color(0xB39FC3AA);
+      ..color = const Color(0x667FA88A);
     for (var i = 0; i < 4; i++) {
       c.drawOval(Rect.fromLTWH(w * .55 - i * 28, h * .2 - i * 18, 60.0 + i * 56, 40.0 + i * 36), cont);
     }
     c.save();
     c.translate(0, h * .66);
     c.rotate(-0.17);
-    c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(-20, 0, w + 40, 16), const Radius.circular(8)), Paint()..color = const Color(0xFFBFDDEF));
+    c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(-20, 0, w + 40, 12), const Radius.circular(6)), Paint()..color = const Color(0xFF4F86AD));
     c.restore();
     final road = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 8
+      ..color = const Color(0xFFB9A77A)
+      ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
     c.drawLine(Offset(-20, h * .45), Offset(w + 20, h * .3), road);
     c.drawLine(Offset(w * .25, -10), Offset(w * .32, h + 10), road);
@@ -512,7 +570,7 @@ class _MapPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 10
-          ..color = Colors.white
+          ..color = AppColors.dark
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
       );
@@ -522,11 +580,11 @@ class _MapPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 6
-          ..color = AppColors.primary
+          ..color = AppColors.accent
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round,
       );
-      final dot = Paint()..color = const Color(0xFF7DAE93);
+      final dot = Paint()..color = const Color(0xFFF5D08A);
       for (double d = metric.length * progress; d < metric.length; d += 12) {
         final t = metric.getTangentForOffset(d);
         if (t != null) c.drawCircle(t.position, 2.5, dot);
@@ -586,7 +644,7 @@ class FakeMap extends StatelessWidget {
       if (route) {
         final a = RouteGeo.at(size, routeInsets, 0);
         final b = RouteGeo.at(size, routeInsets, 1);
-        kids.add(_pinWidget(a.dx, a.dy, AppColors.primary, Icons.flag));
+        kids.add(_pinWidget(a.dx, a.dy, const Color(0xFF2E9E6B), Icons.flag));
         kids.add(_pinWidget(b.dx, b.dy, AppColors.accent, Icons.terrain));
         if (progress < 1) {
           final u = RouteGeo.at(size, routeInsets, progress);

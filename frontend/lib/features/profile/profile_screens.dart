@@ -10,19 +10,19 @@ import '../treks/saved_screen.dart';
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
-  Widget _row(BuildContext context, IconData icon, String label, VoidCallback onTap) {
-    return GestureDetector(
+  // One row of the menu list; rows sit inside a single card, split by thin lines.
+  Widget _row(IconData icon, String label, VoidCallback onTap, {Color color = AppColors.text, bool last = false}) {
+    return InkWell(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(9),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        decoration: BoxDecoration(border: last ? null : const Border(bottom: BorderSide(color: AppColors.border))),
         child: Row(
           children: [
-            Container(width: 36, height: 36, decoration: BoxDecoration(color: AppColors.tint, borderRadius: BorderRadius.circular(10)), child: Icon(icon, size: 18, color: AppColors.primary)),
+            Icon(icon, size: 21, color: color == AppColors.text ? AppColors.primary : color),
             const SizedBox(width: 14),
-            Expanded(child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500))),
-            const Icon(Icons.chevron_right, color: AppColors.muted),
+            Expanded(child: Text(label, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: color))),
+            if (color == AppColors.text) const Icon(Icons.chevron_right, color: AppColors.muted),
           ],
         ),
       ),
@@ -32,75 +32,56 @@ class ProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     void soon() => showMessage(context, 'Coming soon');
+    void push(Widget s) => Navigator.push(context, MaterialPageRoute(builder: (_) => s));
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 240,
-                  decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: [Color(0xFF14352A), Color(0xFF2E7D5B)])),
-                  child: SafeArea(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        CircleAvatar(radius: 40, backgroundColor: Colors.white, child: Text(userInitial(), style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: AppColors.primary))),
-                        const SizedBox(height: 10),
-                        Text(Api.user?['full_name'] ?? '', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white)),
-                        const SizedBox(height: 2),
-                        Text(Api.user?['email'] ?? '', style: const TextStyle(fontSize: 13, color: Color(0xFFCFE6DA))),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 24,
-                  right: 24,
-                  top: 205,
-                  child: Container(
-                    height: 72,
-                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: kShadow),
-                    child: Loader<Map<String, dynamic>>(
-                      load: () async => await Api.get('/hikes/stats'),
-                      builder: (s, _) => Row(
-                        children: [
-                          _ProfileStat('${s['treks']}', 'Treks'),
-                          _ProfileStat('${fmtNum(s['distance_km'])} km', 'Distance'),
-                          _ProfileStat('${s['reviews']}', 'Reviews'),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 56),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                children: [
-                  _row(context, Icons.favorite_border, 'Saved treks', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedTreksScreen()))),
-                  _row(context, Icons.download_rounded, 'Offline maps', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const OfflineMapsScreen()))),
-                  _row(context, Icons.star_outline_rounded, 'My reviews', soon),
-                  _row(context, Icons.notifications_none, 'Notifications', soon),
-                  if (Api.isAdmin) _row(context, Icons.admin_panel_settings_outlined, 'Admin dashboard', () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminDashboardScreen()))),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: () {
-                      Api.logout();
-                      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (r) => false);
-                    },
-                    style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(48), foregroundColor: AppColors.danger, side: const BorderSide(color: Color(0xFFF0C6C4), width: 1.5), shape: const StadiumBorder()),
-                    child: const Text('Log out', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                  ),
-                  const SizedBox(height: 24),
-                ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.accent, width: 2)),
+                child: CircleAvatar(radius: 44, backgroundColor: AppColors.primary, child: Text(userInitial(), style: const TextStyle(fontSize: 36, fontWeight: FontWeight.w700, color: Colors.white))),
               ),
-            ),
-          ],
+              const SizedBox(height: 12),
+              Text(Api.user?['full_name'] ?? '', style: AppText.h1.copyWith(fontSize: 22)),
+              const SizedBox(height: 2),
+              Text(Api.user?['email'] ?? '', style: AppText.small.copyWith(fontSize: 13)),
+              const SizedBox(height: 20),
+              Container(
+                constraints: const BoxConstraints(minHeight: 76),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                child: Loader<Map<String, dynamic>>(
+                  load: () async => await Api.get('/hikes/stats'),
+                  builder: (s, _) => Row(
+                    children: [
+                      _ProfileStat('${s['treks']}', 'Treks'),
+                      _ProfileStat('${fmtNum(s['distance_km'])} km', 'Distance'),
+                      _ProfileStat('${s['reviews']}', 'Reviews'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                child: Column(children: [
+                  _row(Icons.favorite_border, 'Saved Treks', () => push(const SavedTreksScreen())),
+                  _row(Icons.download_outlined, 'Downloaded Maps', () => push(const OfflineMapsScreen())),
+                  _row(Icons.star_outline_rounded, 'My Reviews', soon),
+                  _row(Icons.notifications_none, 'Notifications', soon),
+                  if (Api.isAdmin) _row(Icons.admin_panel_settings_outlined, 'Admin Dashboard', () => push(const AdminDashboardScreen())),
+                  _row(Icons.logout, 'Logout', () {
+                    Api.logout();
+                    Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const LoginScreen()), (r) => false);
+                  }, color: AppColors.danger, last: true),
+                ]),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -113,7 +94,7 @@ class _ProfileStat extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.primary)),
         const SizedBox(height: 4),
         Text(label, style: AppText.small),
@@ -130,7 +111,7 @@ class AdminDashboardScreen extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+        decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
         child: Row(
           children: [
             Container(width: 5, height: 44, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(3))),
@@ -146,7 +127,7 @@ class AdminDashboardScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.border)),
       child: Row(children: [Icon(icon, size: 20, color: AppColors.primary), const SizedBox(width: 14), Expanded(child: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))), const Icon(Icons.chevron_right, color: AppColors.muted)]),
     );
   }
@@ -165,7 +146,7 @@ class AdminDashboardScreen extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(18), border: Border.all(color: AppColors.border)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

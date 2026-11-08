@@ -48,7 +48,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
       child: Row(
         children: [
           SizedBox(width: 56, height: 56, child: MountainScene(colors: t.colors, radius: 12)),
@@ -136,7 +136,7 @@ class _OfflineMapsScreenState extends State<OfflineMapsScreen> {
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                  decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
                   child: SwitchListTile(
                     contentPadding: EdgeInsets.zero,
                     title: const Text('Download on Wi-Fi only', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),

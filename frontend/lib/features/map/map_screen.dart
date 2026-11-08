@@ -20,7 +20,7 @@ class _MapScreenState extends State<MapScreen> {
     final pins = <MapPin>[];
     if (_layers.contains('Treks')) {
       pins.addAll(const [
-        MapPin(.2, .28, AppColors.primary, Icons.terrain),
+        MapPin(.2, .28, Color(0xFF2E9E6B), Icons.terrain),
         MapPin(.66, .36, AppColors.accent, Icons.terrain),
         MapPin(.4, .52, AppColors.danger, Icons.terrain),
       ]);
@@ -29,7 +29,7 @@ class _MapScreenState extends State<MapScreen> {
       pins.addAll(const [MapPin(.75, .58, AppColors.info, Icons.local_parking), MapPin(.3, .7, AppColors.info, Icons.local_parking)]);
     }
     if (_layers.contains('Gear shops')) {
-      pins.addAll(const [MapPin(.16, .62, AppColors.purple, Icons.backpack), MapPin(.58, .22, AppColors.purple, Icons.backpack)]);
+      pins.addAll(const [MapPin(.16, .62, AppColors.accent, Icons.backpack), MapPin(.58, .22, AppColors.accent, Icons.backpack)]);
     }
     return Scaffold(
       body: Stack(
@@ -46,7 +46,7 @@ class _MapScreenState extends State<MapScreen> {
                     child: Container(
                       height: 52,
                       padding: const EdgeInsets.symmetric(horizontal: 18),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(26), boxShadow: kShadow),
+                      decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(26), boxShadow: kShadow),
                       child: const Row(children: [Icon(Icons.search, color: AppColors.muted), SizedBox(width: 10), Text('Search on map', style: TextStyle(fontSize: 15, color: AppColors.muted))]),
                     ),
                   ),
@@ -72,7 +72,7 @@ class _MapScreenState extends State<MapScreen> {
             child: Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: kShadow),
+              decoration: BoxDecoration(color: AppColors.card, shape: BoxShape.circle, boxShadow: kShadow),
               child: const Icon(Icons.my_location, color: AppColors.primary),
             ),
           ),
@@ -96,7 +96,7 @@ class _MapScreenState extends State<MapScreen> {
               onTap: () => openTrek(context, trek),
               child: Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), boxShadow: kShadowUp),
+                decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(22), boxShadow: kShadowUp),
                 child: Row(
                   children: [
                     SizedBox(width: 96, height: 96, child: MountainScene(colors: trek.colors, radius: 16)),
@@ -105,7 +105,7 @@ class _MapScreenState extends State<MapScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(children: [Expanded(child: Text(trek.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700))), const Icon(Icons.star_rounded, size: 16, color: AppColors.accent), Text(' ${trek.rating}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
+                          Row(children: [Expanded(child: Text(trek.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700))), const Icon(Icons.star_rounded, size: 16, color: AppColors.star), Text(' ${trek.rating}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))]),
                           const SizedBox(height: 4),
                           Text(trek.region, style: AppText.small),
                           const SizedBox(height: 6),
