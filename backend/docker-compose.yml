@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ceylon
       POSTGRES_PASSWORD: ceylon
       POSTGRES_DB: ceylon_trekking
-    ports: ["5432:5432"]
+    ports: ["${DB_PORT:-5432}:5432"]   # DB_PORT=5434 if 5432 is taken
     volumes:
       - ./db:/docker-entrypoint-initdb.d   # on first start runs the .sql files here: schema.sql, then seed.sql
       - pgdata:/var/lib/postgresql/data
